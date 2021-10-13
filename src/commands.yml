@@ -1,0 +1,34 @@
+name: My Git
+version: 0.0.1
+about: Reinventing the Git
+author: Kenta Saito <kenta@west.sd.keio.ac.jp>
+
+settings:
+  - ArgRequiredElseHelp
+
+subcommands:
+  - init:
+      about: Create an empty Git repository
+      args:
+        - path:
+            about: create a new directory, and .git in it
+            index: 1
+  - add:
+      about: Add file contents to the index
+      args:
+        - path:
+            about: add files which are under the path to the index
+            index: 1
+  - commit:
+      about: commit changes from_bytes index
+      args:
+        - message:
+            short: m
+            about: commit message
+            takes_value: true
+
+  - head:
+      about: show head info
+
+  - log:
+      about: show git log
