@@ -3,7 +3,7 @@ use clap::ArgMatches;
 use crate::hash::Hash;
 use crate::common::{get_project_root};
 
-pub fn run(matches: &ArgMatches) -> Result<(), String>{
+pub fn run(_matches: &ArgMatches) -> Result<(), String>{
     let head = Head::new()?;
     println!("{:?}", head);
     Ok(())

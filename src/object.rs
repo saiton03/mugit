@@ -586,7 +586,7 @@ impl Commit {
 
         format!("commit {} {}\nAuthor: {} <{}>\nDate:   {}\n\n{}\n",
                     hash.string(), refs_string, self.author.name, self.author.address,
-                    self.author.time_stamp.format("%c %z").to_string(), self.commit_message)
+                    self.author.time_stamp.format("%c %z").to_string(), message)
     }
 
     pub fn timestamp(&self) -> DateTime<FixedOffset> {

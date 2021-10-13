@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeSet};
 use std::path::PathBuf;
 use std::fs;
 use std::io;
@@ -10,7 +10,7 @@ use crate::hash::Hash;
 use crate::object::Commit;
 
 
-pub fn run(matches: &ArgMatches) -> Result<(), String>{
+pub fn run(_matches: &ArgMatches) -> Result<(), String>{
     let object_root = get_project_root()?.join(".git/objects/");
 
     // HEAD only
