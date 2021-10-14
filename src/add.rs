@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use clap::{ArgMatches};
 use crate::common::{get_path_from_project_root, get_project_root};
 use crate::index::{Index, IndexEntry};
-use super::object::{Blob};
+use crate::object::{Blob};
 
 pub fn run(matches: &ArgMatches) -> Result<(), String>{
     let path = matches.value_of("path").ok_or("no path specified")?;
@@ -46,11 +46,11 @@ pub fn run(matches: &ArgMatches) -> Result<(), String>{
     for blob in blob_list {
         let blob_path = object_path.join(blob.hash.generate_path());
         let parent = blob_path.parent().unwrap();
-        fs::create_dir_all(parent);
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
 
         let data = blob.generate_depress()?;
         let mut file = fs::File::create(blob_path).map_err(|e| e.to_string())?;
-        file.write_all(&data).map_err(|e| e.to_string());
+        file.write_all(&data).map_err(|e| e.to_string())?;
     }
 
 
@@ -63,15 +63,15 @@ fn update_index(proj_root: &PathBuf, index: &mut Box<Index>, new: &BTreeSet<Path
     for node in delete {
         index.delete_entry(node)?;
     }
-    add_entries(proj_root, new, index, blob_list);
-    add_entries(proj_root, modify, index, blob_list);
+    add_entries(proj_root, new, index, blob_list)?;
+    add_entries(proj_root, modify, index, blob_list)?;
 
     Ok(())
 }
 
 fn create_index(proj_root: &PathBuf, new: &BTreeSet<PathBuf>, blob_list:&mut Vec<Box<Blob>>) -> Result<Box<Index>, String> {
     let mut index =  Box::new(Index::new());
-    add_entries(proj_root, new, &mut index, blob_list);
+    add_entries(proj_root, new, &mut index, blob_list)?;
 
     Ok(index)
 }
@@ -84,7 +84,7 @@ fn add_entries(proj_root: &PathBuf, nodes: &BTreeSet<PathBuf>,
             ok_or(format!("could not fetch file: {}", abs_path.to_str().unwrap()))?);
         let hash = blob.generate_digest_bytes();
 
-        index.add_entry(node, hash);
+        index.add_entry(node, hash)?;
         blob_list.push(blob);
     }
     Ok(())
@@ -140,7 +140,7 @@ impl DiffParser {
                 if &entry.file_name() == ".git"{
                     continue;
                 }
-                self.search_partial(&entry.path());
+                self.search_partial(&entry.path())?;
             }
         } else if path.is_file() {
             match &self.index {

@@ -133,15 +133,6 @@ fn test_extract_until_null() {
     assert_eq!(s, "ab");
 }
 
-pub fn extract_until_target(byte: &[u8], target: char) -> Vec<u8> {
-    for (i, v) in byte.iter().enumerate() {
-        if *v == target as u8 {
-            return Vec::from(&byte[..i]);
-        }
-    }
-    Vec::from(byte)
-}
-
 pub fn bytes_to_u32(bytes: &[u8]) -> Option<u32> {
     if bytes.len() != 4 {
         return None;

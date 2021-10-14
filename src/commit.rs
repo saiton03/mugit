@@ -35,7 +35,7 @@ pub fn run(matches: &ArgMatches) -> Result<(), String>{
     let obj_path = proj_root.join(".git/objects").join(hash.generate_path());
 
     let path_parent = obj_path.parent().unwrap();
-    fs::create_dir_all(path_parent);
+    fs::create_dir_all(path_parent).map_err(|e| e.to_string())?;
     if !obj_path.exists() {
         fs::write(obj_path, &body).map_err(|e| e.to_string())?;
     }
@@ -104,11 +104,11 @@ impl CommitGenerator {
                 continue;
             }
             let parent = obj_path.parent().unwrap();
-            fs::create_dir_all(parent);
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
 
             let data = tree.generate_depress()?;
             let mut file = fs::File::create(obj_path).map_err(|e| e.to_string())?;
-            file.write_all(&data).map_err(|e| e.to_string());
+            file.write_all(&data).map_err(|e| e.to_string())?;
         }
         Ok(())
     }
@@ -138,7 +138,7 @@ impl CommitTree {
         for entry in entries {
             let node_array = entry.0.to_str().
                 ok_or("cannot parse pathbuf".to_string())?.split("/").collect::<Vec<_>>();
-            tree.update_node(&node_array, entry.1);
+            tree.update_node(&node_array, entry.1)?;
         }
 
         Ok(tree)
@@ -160,7 +160,7 @@ impl CommitTree {
                     }
                 }
                 let mut new_node = Box::new(CommitTree::new());
-                new_node.update_node(node_array, entry);
+                new_node.update_node(node_array, entry)?;
                 node.push((node_name, new_node));
                 Ok(())
             },
@@ -180,8 +180,11 @@ impl CommitTree {
                         },
                         CommitTree::Node(_) => {
                             let hash = node[i].1.generate_tree_obj(tree_list)?;
+                            let node_name = PathBuf::from(&node[i].0).file_name().
+                                ok_or("get node_name failed")?.
+                                to_str().ok_or("convert file_name to string failed")?.to_string();
                             tree.add_tree_node(
-                                TreeNode::from_tree_node(hash, node[i].0.clone()).
+                                TreeNode::from_tree_node(hash, node_name).
                                     ok_or("create node failed".to_string())?
                             );
 
@@ -198,6 +201,7 @@ impl CommitTree {
         }
     }
 
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool{
         match self {
             CommitTree::Leaf(_) => false,
@@ -205,6 +209,7 @@ impl CommitTree {
         }
     }
 
+    #[allow(dead_code)]
     pub fn show_tree(&self, depth: u32, name: String) -> String {
         let mut ret = format!("{}{}\n","  ".repeat(depth as usize),name);
         match self {

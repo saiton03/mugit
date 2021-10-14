@@ -51,14 +51,6 @@ impl Index {
         })
     }
 
-    pub fn from_entries(entries: BTreeMap<PathBuf, IndexEntry>) -> Self {
-        Self {
-            version: 2,
-            entry_num: entries.len() as u32,
-            entries
-        }
-    }
-
     pub fn from_file(proj_root: &PathBuf) -> Option<Self> {
         let index_path = proj_root.join(".git/index");
         let mut file = File::open(index_path).ok()?;
@@ -82,12 +74,6 @@ impl Index {
     pub fn add_entry(&mut self, path: &PathBuf, hash: Hash) -> Result<(),String>{
         let ie = IndexEntry::from_file(path, hash)?;
         self.entries.insert(ie.file_name.clone(), ie);
-        self.update_entry_num();
-        Ok(())
-    }
-
-    pub fn update_entry(&mut self, path: &PathBuf, hash: Hash) -> Result<(),String>{
-        self.add_entry(path, hash)?;
         self.update_entry_num();
         Ok(())
     }
@@ -257,8 +243,13 @@ impl IndexEntry {
     }
 
     pub fn file_name(&self) -> String {
+        self.file_name.file_name().unwrap().to_str().unwrap().to_string()
+    }
+
+    pub fn file_path(&self) -> String {
         self.file_name.to_str().unwrap().to_string()
     }
+
     pub fn hash(&self) -> Hash {
         self.hash
     }

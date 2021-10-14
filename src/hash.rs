@@ -77,30 +77,3 @@ fn test_calc_sha1_bytes() {
     assert_eq!(hex.bytes(), [0x2au8, 0xae, 0x6c, 0x35, 0xc9, 0x4f, 0xcf, 0xb4, 0x15, 0xdb,
         0xe9, 0x5f, 0x40, 0x8b, 0x9c, 0xe9, 0x1e, 0xe8, 0x46, 0xed]);
 }
-
-fn is_valid_sha1(string: &str)-> bool {
-    if string.len() != 40 {
-        return false;
-    }
-    hex::decode(string).is_ok()
-}
-
-pub fn path_from_hash(hash: &str) -> Result<PathBuf, String> {
-    if !is_valid_sha1(hash) {
-        return Err("invalid string".to_string());
-    }
-    let begining = &hash[0..2];
-    let rest = &hash[2..];
-    let path = PathBuf::from(format!("{}/{}", begining, rest));
-
-    Ok(path)
-}
-
-#[test]
-fn test_path_from_hash() {
-    let input = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed";
-    let out = path_from_hash(input).unwrap();
-    assert_eq!(out.as_path(), Path::new("2a/ae6c35c94fcfb415dbe95f408b9ce91ee846ed"))
-}
-
-

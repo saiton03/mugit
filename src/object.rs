@@ -7,14 +7,14 @@ use std::fs;
 use std::io::{Read, Write};
 use std::path::{PathBuf};
 use flate2::Compression;
+use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use crate::hash::{Hash, calc_sha1_bytes, calc_sha1_string};
 use crate::index::IndexEntry;
 use crate::object::CommitterType::{Author, Committer};
 use crate::object::FilePermission::{Executable, UnExecutable};
 use crate::object::FileType::{Directory, File, Submodule, SymbolicLink};
-use self::flate2::read::ZlibDecoder;
-use super::common::{extract_until_null};
+use crate::common::{extract_until_null};
 
 
 #[derive(Debug,PartialEq)]
@@ -83,26 +83,6 @@ impl Blob {
         }
     }
 
-    pub fn from_bytes(bytes: Vec<u8>) -> Option<Blob> {
-        if !bytes.starts_with("blob".as_bytes()) {
-            return None
-        }
-
-        let len_string = String::from_utf8(extract_until_null(&bytes[5..])).
-            ok()?;
-        let len: usize = len_string.parse().ok()?;
-        let header_len: usize = "blob ".len()+len_string.len()+1;
-        let body = &bytes[header_len..];
-        let hash = calc_sha1_bytes(&bytes);
-        Some(Blob{
-            obj_type: ObjType::Blob,
-            len,
-            data: body.to_vec(),
-            payload: bytes,
-            hash
-        })
-    }
-
     pub fn from_file(path: &PathBuf) -> Option<Self> {
         let mut file = fs::File::open(path).ok()?;
         let mut buf = Vec::new();
@@ -135,20 +115,6 @@ fn test_blob() {
     assert_eq!(sha, "e7c23f4e29dc1ae1bc1e8807bb2838d0c9fb6ab5")
 }
 
-#[test]
-fn test_blob_from_bytes() {
-    let bytes = vec![98u8, 108, 111, 98, 32, 49, 50, 0,
-                     104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 10];
-    let out =  Blob::from_bytes(bytes).unwrap();
-    assert_eq!(out, Blob{
-        obj_type: ObjType::Blob,
-        len: 12,
-        data: vec![104u8, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 10],
-        payload: vec![98u8, 108, 111, 98, 32, 49, 50, 0,
-                      104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 10],
-        hash: Hash::from(&[59u8, 24, 229, 18, 219, 167, 158, 76, 131, 0, 221, 8, 174, 179, 127, 142, 114, 139, 141, 173]).unwrap(),
-    });
-}
 
 #[derive(Default,Debug,PartialEq)]
 pub struct Tree {
@@ -229,10 +195,6 @@ impl Tree {
             Some(hash) => hash,
             None => self.calc_bytes_and_hash().1,
         }
-    }
-
-    pub fn hash(&self) -> Option<Hash> {
-        self.hash
     }
 
     pub fn generate_depress(&self) -> Result<Vec<u8>, String> {

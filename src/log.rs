@@ -46,6 +46,7 @@ impl LogParser {
         self.dfs(self.head_hash, &mut visit)?;
 
         self.commits.sort_by_key(|c| c.1.timestamp());
+        self.commits.reverse();
         let ret = self.commits.iter().
             map(|c| c.1.log_entry(c.0, &Vec::new())).
             collect::<Vec<_>>().join("\n");
